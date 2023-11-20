@@ -4,6 +4,7 @@ import ssl
 import configparser
 import mysql.connector
 from mysql.connector import Error
+import datetime  # Import the datetime module for logging
 
 # Function to load configuration
 def load_config():
@@ -25,6 +26,13 @@ def create_db_connection(db_config):
         print(f"Error connecting to MariaDB Platform: {e}")
         return None
 
+# Function to log connection attempts
+def log_connection(attempted, username, success, reason):
+    now = datetime.datetime.now()
+    log_message = f"{now}: {attempted} connection attempt by username '{username}' - {'Successful' if success else 'Failed'} - Reason: {reason}"
+    with open("connection_log.txt", "a") as log_file:
+        log_file.write(log_message + "\n")
+
 # Function to check user credentials
 async def check_user_credentials(username, password, db_config):
     connection = create_db_connection(db_config)
@@ -37,21 +45,18 @@ async def check_user_credentials(username, password, db_config):
             cursor.close()
             connection.close()
             if record and password == record[0]:  # Simplified for demonstration, use hashed password comparison
-                return True
+                return True, "Login successful"
             else:
-                return False
+                return False, "Invalid username or password"
         except Error as e:
-            print(f"Error: {e}")
-            return False
+            return False, f"Error: {e}"
     else:
-        return False
+        return False, "Database connection error"
 
 # Echo function with registration logic
 async def handle_client(websocket, path, registration_enabled, db_config):
-    if registration_enabled:
-        await websocket.send("Sparkfuse Signals here! Login with [login] or Register with [register]")
-    else:
-        await websocket.send("Sparkfuse Signals here! Registrations are currently closed. Existing accounts login with [login]")
+    attempted = "Registration" if registration_enabled else "Login"
+    await websocket.send(f"Sparkfuse Signals here! {attempted} with [login] or {'Register' if registration_enabled else 'Login'} with [register]")
 
     async for message in websocket:
         # Parse the message and perform actions based on the content.
@@ -60,10 +65,9 @@ async def handle_client(websocket, path, registration_enabled, db_config):
         parts = message.split()
         if parts[0].lower() == "login" and len(parts) == 3:
             username, password = parts[1], parts[2]
-            if await check_user_credentials(username, password, db_config):
-                await websocket.send("Login successful")
-            else:
-                await websocket.send("Login failed")
+            success, reason = await check_user_credentials(username, password, db_config)
+            await websocket.send(reason)
+            log_connection(attempted, username, success, reason)
 
 async def main():
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
