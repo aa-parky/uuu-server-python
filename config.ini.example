@@ -1,0 +1,8 @@
+[Settings]
+Registration = False
+
+[Database]
+host = your_host_name_here
+user = your_mariadb_user_here
+password = mariadb_password
+database = your database name
