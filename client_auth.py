@@ -27,9 +27,12 @@ async def interact_with_server():
             await websocket.send(f"login {username} {password}")
         elif action == "register" and registration_enabled:
             email = input("Enter email: ")
-            await websocket.send(f"register {email}")
+            username = input("Enter username: ")
+            password = input("Enter password: ")
+            await websocket.send(f"register {username} {password} {email}")
         else:
-            print("Invalid action.")
+            print("Invalid action. Please try again.")
+            return  # Exit the function if the action is invalid
 
         # Wait for server response
         response = await websocket.recv()
