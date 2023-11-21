@@ -3,7 +3,7 @@ import asyncio
 import websockets
 
 async def interact_with_server():
-    uri = "wss://undermine-undertakers.uk:7450"
+    uri = "wss://localhost:7450"
 
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False

@@ -55,19 +55,29 @@ async def check_user_credentials(username, password, db_config):
 
 # Echo function with registration logic
 async def handle_client(websocket, path, registration_enabled, db_config):
-    attempted = "Registration" if registration_enabled else "Login"
-    await websocket.send(f"Sparkfuse Signals here! {attempted} with [login] or {'Register' if registration_enabled else 'Login'} with [register]")
+    greeting_message = "Sparkfuse Signals here! Login with [login]"
+    if registration_enabled:
+        greeting_message += " or Register with [register]"
+    else:
+        greeting_message += ". Registration currently closed"
+
+    await websocket.send(greeting_message)
 
     async for message in websocket:
         # Parse the message and perform actions based on the content.
         print(f"Received message: {message}")
-        # Add logic here to handle login or registration based on the message
         parts = message.split()
-        if parts[0].lower() == "login" and len(parts) == 3:
-            username, password = parts[1], parts[2]
-            success, reason = await check_user_credentials(username, password, db_config)
-            await websocket.send(reason)
-            log_connection(attempted, username, success, reason)
+        attempted = "Unknown"
+        if parts[0].lower() == "login":
+            attempted = "Login"
+            if len(parts) == 3:
+                username, password = parts[1], parts[2]
+                success, reason = await check_user_credentials(username, password, db_config)
+                await websocket.send(reason)
+                log_connection(attempted, username, success, reason)
+        elif registration_enabled and parts[0].lower() == "register":
+            attempted = "Registration"
+            # Add registration logic here
 
 async def main():
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

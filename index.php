@@ -1,60 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
+<html ng-app="app">
 <head>
-    <meta charset="UTF-8">
-    <title>WebSocket Client</title>
+    <script type="text/javascript">
+
+    var myWebSocket;
+
+
+    function connectToWS() {
+        var endpoint = document.getElementById("endpoint").value;
+        if (myWebSocket !== undefined) {
+            myWebSocket.close()
+        }
+
+        myWebSocket = new WebSocket(endpoint);
+
+        myWebSocket.onmessage = function(event) {
+            var leng;
+            if (event.data.size === undefined) {
+                leng = event.data.length
+            } else {
+                leng = event.data.size
+            }
+            console.log("onmessage. size: " + leng + ", content: " + event.data);
+        }
+
+        myWebSocket.onopen = function(evt) {
+            console.log("onopen.");
+        };
+
+        myWebSocket.onclose = function(evt) {
+            console.log("onclose.");
+        };
+
+        myWebSocket.onerror = function(evt) {
+            console.log("Error!");
+        };
+    }
+
+    function sendMsg() {
+        var message = document.getElementById("myMessage").value;
+        myWebSocket.send(message);
+    }
+
+    function closeConn() {
+        myWebSocket.close();
+    }
+
+    </script>
 </head>
 <body>
-    <h2>WebSocket Client</h2>
-    <div id="messageBox"></div>
-    <input type="text" id="inputField" placeholder="Enter command" style="display: none;">
-    <button id="sendButton" style="display: none;">Send</button>
 
-    <script>
-        var socket;
-        var messageBox = document.getElementById('messageBox');
-        var inputField = document.getElementById('inputField');
-        var sendButton = document.getElementById('sendButton');
+    <form>
+        connection to: <input type="text" id="endpoint" name="endpoint" value="wss://undermine-undertakers.uk:7450"  style="width: 200px" ><br>
+    </form>
 
-        function connectWebSocket() {
-            // Configure the SSL context to accept self-signed certificates
-            socket = new WebSocket("wss://localhost:7450", null, null, { rejectUnauthorized: false });
+    <input type="button" onclick="connectToWS()" value="connect to WebSocket endpoint" /><br><br>
 
-            socket.onopen = function() {
-                console.log("Connected to the WebSocket server");
-            };
+    <form>
+        message: <input type="text" id="myMessage" name="myMessage" value="hi there!"><br>
+    </form>
 
-            socket.onmessage = function(event) {
-                console.log("Received message from server: " + event.data);
-                messageBox.innerText = event.data;
-                inputField.style.display = 'block';
-                sendButton.style.display = 'block';
+    <input type="button" onclick="sendMsg()" value="Send message" />
 
-                // Check if the message includes 'Register' to enable registration
-                if (event.data.includes('Register')) {
-                    inputField.placeholder = 'Enter command (login or register)';
-                } else {
-                    inputField.placeholder = 'Enter command (login)';
-                }
-            };
+    <input type="button" onclick="closeConn()" value="Close connection" />
 
-            socket.onerror = function(error) {
-                console.error('WebSocket Error: ' + error);
-            };
 
-            socket.onclose = function(event) {
-                console.log("WebSocket is closed now.");
-            };
-        }
-
-        function sendMessage() {
-            var message = inputField.value;
-            socket.send(message);
-            inputField.value = '';
-        }
-
-        window.onload = connectWebSocket;
-        sendButton.onclick = sendMessage;
-    </script>
 </body>
 </html>
