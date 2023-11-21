@@ -4,9 +4,10 @@ import ssl
 import configparser
 import mysql.connector
 from mysql.connector import Error
-import datetime
 
 # Function to load configuration
+
+
 def load_config():
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -18,6 +19,8 @@ def load_config():
     return registration, db_config, ssl_config, server_config, messages
 
 # Function to create a database connection
+
+
 def create_db_connection(db_config):
     try:
         connection = mysql.connector.connect(
@@ -32,6 +35,8 @@ def create_db_connection(db_config):
         return None
 
 # Function to check user credentials
+
+
 async def check_credentials(websocket, db_config):
     await websocket.send("Enter username:")
     username = await websocket.recv()
@@ -59,9 +64,12 @@ async def check_credentials(websocket, db_config):
         return False
 
 # Websocket server handler
-async def server_handler(websocket, path):
+
+
+async def server_handler(websocket):
     registration, db_config, ssl_config, server_config, messages = load_config()
-    greeting_message = messages['greeting_with_registration'] if registration else messages['greeting_without_registration']
+    greeting_key = 'greeting_with_registration' if registration else 'greeting_without_registration'
+    greeting_message = messages[greeting_key]
     await websocket.send(greeting_message)
 
     try:
@@ -79,6 +87,8 @@ async def server_handler(websocket, path):
         print("Connection closed.")
 
 # Start the websocket server
+
+
 async def start_server():
     _, _, ssl_config, server_config, _ = load_config()
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

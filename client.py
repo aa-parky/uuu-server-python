@@ -3,6 +3,7 @@ import websockets
 import ssl
 import datetime
 
+
 async def websocket_client():
     uri = "wss://localhost:7450"  # Replace with your server's URI
 
