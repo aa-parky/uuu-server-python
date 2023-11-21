@@ -6,8 +6,6 @@ import mysql.connector
 from mysql.connector import Error
 
 # Function to load configuration
-
-
 def load_config():
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -19,8 +17,6 @@ def load_config():
     return registration, db_config, ssl_config, server_config, messages
 
 # Function to create a database connection
-
-
 def create_db_connection(db_config):
     try:
         connection = mysql.connector.connect(
@@ -35,16 +31,12 @@ def create_db_connection(db_config):
         return None
 
 # Function to check user credentials
-
-
 async def check_credentials(websocket, db_config):
     await websocket.send("Enter username:")
     username = await websocket.recv()
-
     await websocket.send("Enter password:")
     password = await websocket.recv()
 
-    # Connect to the database and verify credentials
     connection = create_db_connection(db_config)
     if connection:
         try:
@@ -53,10 +45,33 @@ async def check_credentials(websocket, db_config):
             user_password = cursor.fetchone()
             cursor.close()
             connection.close()
-            if user_password and user_password[0] == password:
-                return True
-            else:
+            return user_password and user_password[0] == password
+        except Error as e:
+            print(f"Database error: {e}")
+            return False
+    else:
+        return False
+
+# Function to handle user registration
+async def register_user(websocket, db_config):
+    await websocket.send("Enter email address for registration:")
+    email = await websocket.recv()
+
+    connection = create_db_connection(db_config)
+    if connection:
+        try:
+            cursor = connection.cursor()
+            cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
+            existing_email = cursor.fetchone()
+            cursor.close()
+            connection.close()
+            if existing_email:
+                await websocket.send("Email already exists. Did you forget your password?")
                 return False
+            else:
+                # Additional registration steps can be added here
+                await websocket.send("Email available for registration.")
+                return True
         except Error as e:
             print(f"Database error: {e}")
             return False
@@ -64,12 +79,9 @@ async def check_credentials(websocket, db_config):
         return False
 
 # Websocket server handler
-
-
-async def server_handler(websocket):
+async def server_handler(websocket, path):
     registration, db_config, ssl_config, server_config, messages = load_config()
-    greeting_key = 'greeting_with_registration' if registration else 'greeting_without_registration'
-    greeting_message = messages[greeting_key]
+    greeting_message = messages['greeting_with_registration'] if registration else messages['greeting_without_registration']
     await websocket.send(greeting_message)
 
     try:
@@ -77,18 +89,15 @@ async def server_handler(websocket):
             message = await websocket.recv()
             if message.lower() == "login":
                 login_success = await check_credentials(websocket, db_config)
-                if login_success:
-                    await websocket.send("Login successful.")
-                else:
-                    await websocket.send("Login failed.")
+                await websocket.send("Login successful." if login_success else "Login failed.")
+            elif message.lower() == "register" and registration:
+                await register_user(websocket, db_config)
             else:
-                await websocket.send("Unknown command. Try 'login'.")
+                await websocket.send("Unknown command. Try 'login' or 'register'.")
     except websockets.exceptions.ConnectionClosed:
         print("Connection closed.")
 
 # Start the websocket server
-
-
 async def start_server():
     _, _, ssl_config, server_config, _ = load_config()
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
