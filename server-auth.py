@@ -6,6 +6,7 @@ import mysql.connector
 from mysql.connector import Error
 import datetime
 
+
 # Function to load configuration
 def load_config():
     config = configparser.ConfigParser()
@@ -16,6 +17,7 @@ def load_config():
     server_config = config['Server']
     messages = config['Messages']  # Load messages from config.ini
     return registration, db_config, ssl_config, server_config, messages
+
 
 # Function to create a database connection
 def create_db_connection(db_config):
@@ -31,12 +33,17 @@ def create_db_connection(db_config):
         print(f"Error connecting to MariaDB Platform: {e}")
         return None
 
+
 # Function to log connection attempts
 def log_connection(attempted, username, success, reason):
     now = datetime.datetime.now()
-    log_message = f"{now}: {attempted} connection attempt by username '{username}' - {'Successful' if success else 'Failed'} - Reason: {reason}"
+    log_message = (
+        f"{now}: {attempted} connection attempt by username '{username}' - "
+        f"{'Successful' if success else 'Failed'} - Reason: {reason}"
+    )
     with open("connection_log.txt", "a") as log_file:
         log_file.write(log_message + "\n")
+
 
 # Function to check user credentials
 async def check_user_credentials(username, password, db_config):
@@ -58,15 +65,16 @@ async def check_user_credentials(username, password, db_config):
     else:
         return False, "Database connection error"
 
+
 # Echo function with registration logic
 async def handle_client(websocket, path, registration_enabled, db_config, messages):
-    greeting_message = messages['greeting_with_registration'] if registration_enabled else messages['greeting_without_registration']
+    greeting_message = messages['greeting_with_registration'] if registration_enabled else messages[
+        'greeting_without_registration']
     await websocket.send(greeting_message)
 
     async for message in websocket:
         print(f"Received message: {message}")
         parts = message.split()
-        attempted = "Unknown"
         if parts[0].lower() == "login":
             attempted = "Login"
             if len(parts) == 3:
@@ -76,7 +84,9 @@ async def handle_client(websocket, path, registration_enabled, db_config, messag
                 log_connection(attempted, username, success, reason)
         elif registration_enabled and parts[0].lower() == "register":
             attempted = "Registration"
-            # Add registration logic here
+
+# Add registration logic here
+
 
 async def main():
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -88,6 +98,7 @@ async def main():
     async with websockets.serve(lambda ws, path: handle_client(ws, path, registration_enabled, db_config, messages),
                                 server_host, server_port, ssl=ssl_context):
         await asyncio.Future()  # run forever
+
 
 if __name__ == "__main__":
     asyncio.run(main())
