@@ -106,7 +106,8 @@ async def register_user(websocket, db_config):
 
 async def server_handler(websocket, path):
     registration, db_config, ssl_config, server_config, messages = load_config()
-    greeting_message = messages['greeting_with_registration'] if registration else messages['greeting_without_registration']
+    greeting_key = 'greeting_with_registration' if registration else 'greeting_without_registration'
+    greeting_message = messages[greeting_key]
     await websocket.send(greeting_message)
 
     try:
