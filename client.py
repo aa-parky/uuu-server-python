@@ -14,7 +14,7 @@ async def websocket_client():
     async with websockets.connect(uri, ssl=ssl_context) as websocket:
         greeting = await websocket.recv()
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"{current_time} Server says: {greeting}")
+        print(f"{current_time}: {greeting}")
 
         while True:
             message_to_send = input("> ")
