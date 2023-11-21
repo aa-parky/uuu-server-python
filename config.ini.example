@@ -1,8 +1,20 @@
 [Settings]
 Registration = False
 
+[Messages]
+greeting_with_registration = Welcome! Login with [login] or Register with [register]
+greeting_without_registration = Welcome! Login with [login]. Registration currently closed
+
 [Database]
 host = your_host_name_here
 user = your_mariadb_user_here
 password = mariadb_password
-database = your database name
+database = your_database_name
+
+[SSL]
+certfile = path_to_your_certificate_file
+keyfile = path_to_your_key_file
+
+[Server]
+host = localhost  # Replace with your server's host
+port = 7450       # Replace with your server's port
