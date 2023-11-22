@@ -1,8 +1,7 @@
+import bcrypt
 from mysql.connector import Error
 from database import create_db_connection
 
-
-# Function to check user credentials
 async def check_credentials(websocket, db_config):
     await websocket.send("Enter username:")
     username = await websocket.recv()
@@ -14,10 +13,15 @@ async def check_credentials(websocket, db_config):
         try:
             cursor = connection.cursor()
             cursor.execute("SELECT password FROM users WHERE username = %s", (username,))
-            user_password = cursor.fetchone()
+            user_password_hash = cursor.fetchone()
             cursor.close()
             connection.close()
-            return user_password is not None and user_password[0] == password
+
+            # Verify the password
+            if user_password_hash is not None:
+                return bcrypt.checkpw(password.encode(), user_password_hash[0].encode())
+
+            return False
 
         except Error as e:
             print(f"Database error: {e}")

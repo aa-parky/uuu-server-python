@@ -1,6 +1,7 @@
+import bcrypt
 import random
 import string
-import re  # Import the regular expressions library
+import re
 from mysql.connector import Error
 from database import create_db_connection
 
@@ -60,10 +61,12 @@ async def register_user(websocket, db_config):
     try:
         # Generate a random password
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-        # Insert the new user into the database
+        # Insert the new user with the hashed password into the database
         cursor.execute("INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
-                       (email, username, password))
+                       (email, username, hashed_password))
         connection.commit()
         cursor.close()
         connection.close()
