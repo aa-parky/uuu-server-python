@@ -17,7 +17,8 @@ async def check_credentials(websocket, db_config):
             user_password = cursor.fetchone()
             cursor.close()
             connection.close()
-            return user_password and user_password[0] == password
+            return user_password is not None and user_password[0] == password
+
         except Error as e:
             print(f"Database error: {e}")
             return False

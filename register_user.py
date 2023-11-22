@@ -1,44 +1,75 @@
 import random
 import string
+import re  # Import the regular expressions library
 from mysql.connector import Error
 from database import create_db_connection
 
-
 async def register_user(websocket, db_config):
-    await websocket.send("Enter email address for registration:")
-    email = await websocket.recv()
+    # Loop for email validation
+    while True:
+        await websocket.send("Enter email address for registration:")
+        email = await websocket.recv()
 
-    connection = create_db_connection(db_config)
-    if connection:
-        try:
+        # Validate email format
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            await websocket.send("Invalid email format. Please enter a valid email address.")
+            continue
+
+        # Check for blank email
+        if not email.strip():
+            await websocket.send("Email cannot be blank. Please enter a valid email address.")
+            continue
+
+        connection = create_db_connection(db_config)
+        if connection:
             cursor = connection.cursor()
             cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
             existing_email = cursor.fetchone()
-            cursor.close()
 
             if existing_email:
                 await websocket.send("Email already exists. Did you forget your password?")
-                return False
-            else:
-                await websocket.send("Enter a username for registration (this is NOT your character name):")
-                username = await websocket.recv()
-                # You can add more registration steps here if needed
-
-                # Generate a random password
-                password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-
-                # Insert the new user into the database
-                cursor = connection.cursor()
-                cursor.execute("INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
-                               (email, username, password))
-                connection.commit()
                 cursor.close()
                 connection.close()
+                return False
 
-                await websocket.send("Registration successful. Your username and password have been created.")
-                return True
-        except Error as e:
-            print(f"Database error: {e}")
-            return False
-    else:
+            # Break the loop if email validation is successful
+            break
+
+    # Loop for username validation
+    while True:
+        await websocket.send("Enter a username for registration (this is NOT your character name):")
+        username = await websocket.recv()
+
+        # Check for blank username
+        if not username.strip():
+            await websocket.send("Username cannot be blank. Please enter a valid username.")
+            continue
+
+        # Check if username already exists
+        cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
+        existing_username = cursor.fetchone()
+
+        if existing_username:
+            await websocket.send("Username already exists. Please choose a different one.")
+            continue
+
+        # Break the loop if username validation is successful
+        break
+
+    # Proceed with registration using validated email and username
+    try:
+        # Generate a random password
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+
+        # Insert the new user into the database
+        cursor.execute("INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
+                       (email, username, password))
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        await websocket.send(f"Registration successful. Your username is '{username}' and your password is '{password}'.")
+        return True
+    except Error as e:
+        print(f"Database error: {e}")
         return False
