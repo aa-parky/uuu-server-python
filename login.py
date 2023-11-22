@@ -2,6 +2,7 @@ import bcrypt
 from mysql.connector import Error
 from database import create_db_connection
 
+
 async def check_credentials(websocket, db_config):
     await websocket.send("Enter username:")
     username = await websocket.recv()

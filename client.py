@@ -4,16 +4,19 @@ import ssl
 import datetime
 import aioconsole
 
+
 async def receive_messages(websocket):
     while True:
         response = await websocket.recv()
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"{current_time} > {response}")
 
+
 async def send_messages(websocket):
     while True:
         message_to_send = await aioconsole.ainput("> ")
         await websocket.send(message_to_send)
+
 
 async def websocket_client():
     uri = "wss://localhost:7450"  # Replace with your server's URI

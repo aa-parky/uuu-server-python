@@ -5,6 +5,7 @@ import re
 from mysql.connector import Error
 from database import create_db_connection
 
+
 async def register_user(websocket, db_config):
     # Loop for email validation
     while True:
@@ -71,7 +72,11 @@ async def register_user(websocket, db_config):
         cursor.close()
         connection.close()
 
-        await websocket.send(f"Registration successful. Your username is '{username}' and your password is '{password}'.")
+        await websocket.send(
+            f"Registration successful. Your username is '{username}' "
+            f"and your password is '{password}'."
+        )
+
         return True
     except Error as e:
         print(f"Database error: {e}")
