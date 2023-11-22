@@ -2,8 +2,6 @@ import asyncio
 import websockets
 import ssl
 import configparser
-import mysql.connector
-from mysql.connector import Error
 from register_user import register_user
 from login import check_credentials
 
@@ -18,27 +16,6 @@ def load_config():
     server_config = config['Server']
     messages = config['Messages']
     return registration, db_config, ssl_config, server_config, messages
-
-
-# Function to create a database connection
-def create_db_connection(db_config):
-    try:
-        connection = mysql.connector.connect(
-            host=db_config['host'],
-            user=db_config['user'],
-            password=db_config['password'],
-            database=db_config['database']
-        )
-        return connection
-    except Error as e:
-        print(f"Error connecting to MariaDB Platform: {e}")
-        return None
-
-
-# Function to check user credentials - moved to login.py
-
-
-# Function to handle user registration removed to register_user.py
 
 
 # Websocket server handler
