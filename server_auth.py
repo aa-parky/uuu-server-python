@@ -2,14 +2,12 @@ import asyncio
 import websockets
 import ssl
 import configparser
-import random
-import string
 import mysql.connector
 from mysql.connector import Error
+from register_user import register_user  # Import the register_user function from register_user.py
+
 
 # Function to load configuration
-
-
 def load_config():
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -20,9 +18,8 @@ def load_config():
     messages = config['Messages']
     return registration, db_config, ssl_config, server_config, messages
 
+
 # Function to create a database connection
-
-
 def create_db_connection(db_config):
     try:
         connection = mysql.connector.connect(
@@ -36,9 +33,8 @@ def create_db_connection(db_config):
         print(f"Error connecting to MariaDB Platform: {e}")
         return None
 
+
 # Function to check user credentials
-
-
 async def check_credentials(websocket, db_config):
     await websocket.send("Enter username:")
     username = await websocket.recv()
@@ -60,50 +56,10 @@ async def check_credentials(websocket, db_config):
     else:
         return False
 
+# Function to handle user registration removed to register_user.py
 
-# Function to handle user registration
-async def register_user(websocket, db_config):
-    await websocket.send("Enter email address for registration:")
-    email = await websocket.recv()
-
-    connection = create_db_connection(db_config)
-    if connection:
-        try:
-            cursor = connection.cursor()
-            cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
-            existing_email = cursor.fetchone()
-            cursor.close()
-
-            if existing_email:
-                await websocket.send("Email already exists. Did you forget your password?")
-                return False
-            else:
-                await websocket.send("Enter a username for registration (this is NOT your character name):")
-                username = await websocket.recv()
-                # You can add more registration steps here if needed
-
-                # Generate a random password
-                password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-
-                # Insert the new user into the database
-                cursor = connection.cursor()
-                cursor.execute("INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
-                               (email, username, password))
-                connection.commit()
-                cursor.close()
-                connection.close()
-
-                await websocket.send("Registration successful. Your username and password have been created.")
-                return True
-        except Error as e:
-            print(f"Database error: {e}")
-            return False
-    else:
-        return False
 
 # Websocket server handler
-
-
 async def server_handler(websocket, path):
     registration, db_config, ssl_config, server_config, messages = load_config()
     greeting_key = 'greeting_with_registration' if registration else 'greeting_without_registration'
@@ -123,9 +79,8 @@ async def server_handler(websocket, path):
     except websockets.exceptions.ConnectionClosed:
         print("Connection closed.")
 
+
 # Start the websocket server
-
-
 async def start_server():
     _, _, ssl_config, server_config, _ = load_config()
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
