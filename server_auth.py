@@ -4,7 +4,8 @@ import ssl
 import configparser
 import mysql.connector
 from mysql.connector import Error
-from register_user import register_user  # Import the register_user function from register_user.py
+from register_user import register_user
+from login import check_credentials
 
 
 # Function to load configuration
@@ -34,27 +35,8 @@ def create_db_connection(db_config):
         return None
 
 
-# Function to check user credentials
-async def check_credentials(websocket, db_config):
-    await websocket.send("Enter username:")
-    username = await websocket.recv()
-    await websocket.send("Enter password:")
-    password = await websocket.recv()
+# Function to check user credentials - moved to login.py
 
-    connection = create_db_connection(db_config)
-    if connection:
-        try:
-            cursor = connection.cursor()
-            cursor.execute("SELECT password FROM users WHERE username = %s", (username,))
-            user_password = cursor.fetchone()
-            cursor.close()
-            connection.close()
-            return user_password and user_password[0] == password
-        except Error as e:
-            print(f"Database error: {e}")
-            return False
-    else:
-        return False
 
 # Function to handle user registration removed to register_user.py
 
