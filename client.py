@@ -3,13 +3,26 @@ import websockets
 import ssl
 import datetime
 import aioconsole
+import configparser
+
+
+# Function to read the display_current_time setting from client_config.ini
+def read_display_current_time_setting():
+    config = configparser.ConfigParser()
+    config.read('client_config.ini')
+    return config.getboolean('Settings', 'display_current_time')
 
 
 async def receive_messages(websocket):
     while True:
         response = await websocket.recv()
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"{current_time} > {response}")
+        display_time = read_display_current_time_setting()
+
+        if display_time:
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"{current_time} > {response}")
+        else:
+            print(response)
 
 
 async def send_messages(websocket):
@@ -27,8 +40,13 @@ async def websocket_client():
 
     async with websockets.connect(uri, ssl=ssl_context) as websocket:
         greeting = await websocket.recv()
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"{current_time}: {greeting}")
+        display_time = read_display_current_time_setting()
+
+        if display_time:
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"{current_time}: {greeting}")
+        else:
+            print(greeting)
 
         # Start asynchronous tasks
         receive_task = asyncio.create_task(receive_messages(websocket))
@@ -36,6 +54,7 @@ async def websocket_client():
 
         # Wait for tasks to complete
         await asyncio.gather(receive_task, send_task)
+
 
 # Run the client
 asyncio.run(websocket_client())
