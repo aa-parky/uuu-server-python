@@ -11,6 +11,16 @@ class CLobby:
         self.messages = messages
         self.switch_context = switch_context
 
+        # Define available commands for this context
+        self.available_commands = {
+            'help': 'Get help about commands',
+            'commands': 'List all available commands',
+            'manage': 'Enter management context',
+            'messages': 'Enter messages context',
+            '/quit': 'type /quit to close exit the world'
+            # ... other commands ...
+        }
+
         # Run the initial lobby setup, like displaying MOTD
         asyncio.create_task(self.initial_lobby_setup())
 
@@ -48,7 +58,21 @@ class CLobby:
         elif command.lower() == 'manage':
             # Switch to the management context
             await self.switch_context('c_management')
-        # ... handle other lobby-specific commands here ...
+        elif command.lower() == 'messages':
+            # Switch to the messages context
+            await self.switch_context('c_messages')
+        elif command.lower() == '/quit':
+            # Switch to the quit context
+            await self.switch_context('c_quit')
+        elif command.lower() == 'commands':
+            await self.display_available_commands()
         else:
             # Handle unrecognized command or general lobby actions
-            await self.websocket.send("Unrecognized command in lobby. Type 'help' for assistance.")
+            await self.websocket.send(
+                "Unrecognized Lobby command. Type 'help', 'commands', 'manage', or 'messages' for more information.")
+
+    async def display_available_commands(self):
+        commands_info = "Available Commands:\n"
+        for cmd, description in self.available_commands.items():
+            commands_info += f"- {cmd}: {description}\n"
+        await self.websocket.send(commands_info)

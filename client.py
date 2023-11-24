@@ -6,11 +6,13 @@ import configparser
 import threading
 import queue
 
+
 # Function to read the display_current_time setting from client_config.ini
 def read_display_current_time_setting():
     config = configparser.ConfigParser()
     config.read('client_config.ini')
     return config.getboolean('Settings', 'display_current_time')
+
 
 async def receive_messages(websocket):
     while True:
@@ -24,15 +26,18 @@ async def receive_messages(websocket):
 
         print("\r" + message_to_display, end="\n> ", flush=True)  # Overwrite the current line and print the message
 
+
 async def send_messages(websocket, message_queue):
     while True:
         message_to_send = await asyncio.to_thread(message_queue.get)
         await websocket.send(message_to_send)
 
+
 def input_thread(message_queue):
     while True:
         message_to_send = input("> ")
         message_queue.put(message_to_send)
+
 
 async def websocket_client():
     uri = "wss://localhost:7450"  # Replace with your server's URI
