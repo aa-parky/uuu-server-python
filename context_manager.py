@@ -1,5 +1,6 @@
 from importlib import import_module
 
+
 class ContextManager:
     def __init__(self, websocket, db_config, registration_enabled, messages):
         self.current_context = None

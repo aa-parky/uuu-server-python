@@ -61,9 +61,6 @@ class CLobby:
         elif command.lower() == 'messages':
             # Switch to the messages context
             await self.switch_context('c_messages')
-        elif command.lower() == '/quit':
-            # Switch to the quit context
-            await self.switch_context('c_quit')
         elif command.lower() == 'commands':
             await self.display_available_commands()
         else:

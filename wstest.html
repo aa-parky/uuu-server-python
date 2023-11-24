@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket Client</title>
+<style>
+  #main {
+    background-color: yellow;
+    height: 300px; /* Example height */
+  }
+  #topnav {
+    background-color: blue;
+    height: 100px; /* Example height */
+  }
+  #botnav {
+    background-color: gray;
+    height: 100px; /* Example height */
+  }
+
+  #client_input {
+    background-color: pink;
+    height: 100px; /* Example height */
+  }
+</style>
+</head>
+<body>
+<div id="main"></div>
+<div id="topnav"></div>
+<div id="botnav"></div>
+<div id="client_input"></div>
+
+<script>
+// Create WebSocket connection.
+const socket = new WebSocket('wss://localhost:7450');
+
+// Connection opened
+socket.addEventListener('open', function (event) {
+    console.log('Connected to WS Server');
+});
+
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', event.data);
+    const data = JSON.parse(event.data);
+    const targetDiv = document.getElementById(data.target);
+    if (targetDiv) {
+        targetDiv.innerHTML = data.message; // Update the div with the message.
+    }
+});
+
+// Connection closed
+socket.addEventListener('close', function (event) {
+    console.log('Disconnected from WS Server');
+});
+</script>
+</body>
+</html>

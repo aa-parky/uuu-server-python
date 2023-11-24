@@ -40,7 +40,7 @@ def input_thread(message_queue):
 
 
 async def websocket_client():
-    uri = "wss://localhost:7450"  # Replace with your server's URI
+    uri = "wss://undermine-undertakers.uk:7450"  # Replace with your server's URI
 
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
