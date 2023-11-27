@@ -1,8 +1,12 @@
-In the shadows of Azeroth, where the faint glimmer of adventure sparks brighter than any treasure,
- there lies an opportunity for the bold and the daring. To the Goblins, and all who find
- kinship in the hustle of the lesser-trodden paths, the Undermine Undertakers extend an elusive
- invitation.
 
-Picture this: the thrill of the unexplored, the allure of secrets waiting to be unearthed,
-and the promise of tales that beg to be told. Here, amidst the twisting alleys of intrigue,
-every turn is a story, and every shadow hides a legend in the making.
+Welcome to the Lobby of the Undermine Undertakers!
+
+The lobby is an OOC environment.
+
+Type 'manage' to select or create a character.
+
+Type 'messages' to check your out of game mailbox.
+
+Type 'channels' for available chat.
+
+With peace, love and respect, go have an adventure!

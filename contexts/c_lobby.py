@@ -13,6 +13,7 @@ class CLobby:
 
         # Define available commands for this context
         self.available_commands = {
+            'refresh': 'refresh screen',
             'help': 'Get help about commands',
             'commands': 'List all available commands',
             'manage': 'Enter management context',
@@ -45,16 +46,24 @@ class CLobby:
         motd_file = config['Messages']['motd_file']
         try:
             with open(motd_file, 'r') as file:
-                motd_text = '\n' + file.read()
-                motd_text = textwrap.fill(motd_text, width=80)
+                motd_text = file.read()
+
+                # Splitting the text into paragraphs and wrapping each paragraph
+                paragraphs = motd_text.split('\n\n')
+                wrapped_paragraphs = [textwrap.fill(paragraph, width=80) for paragraph in paragraphs]
+
+                # Joining the paragraphs back together with two newlines as separator
+                motd_text = '\n\n'.join(wrapped_paragraphs)
+
                 return motd_text
         except FileNotFoundError:
             return "MOTD file not found."
-
     async def handle_command(self, command):
         if command.lower() == 'help':
             # Switch to the help context
             await self.switch_context('c_help')
+        elif command.lower() == 'refresh':
+           await  self.switch_context('c_lobby')
         elif command.lower() == 'manage':
             # Switch to the management context
             await self.switch_context('c_management')
