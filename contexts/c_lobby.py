@@ -4,12 +4,13 @@ import textwrap
 
 
 class CLobby:
-    def __init__(self, websocket, db_config, registration_enabled, messages, switch_context):
+    def __init__(self, websocket, db_config, registration_enabled, messages, switch_context, username):
         self.websocket = websocket
         self.db_config = db_config
         self.registration_enabled = registration_enabled
         self.messages = messages
         self.switch_context = switch_context
+        self.username = username
 
         # Define available commands for this context
         self.available_commands = {

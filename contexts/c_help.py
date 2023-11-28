@@ -19,9 +19,9 @@ class CHelp:
         }
 
         # Run the initial lobby setup, like displaying MOTD
-        asyncio.create_task(self.initial_lobby_setup())
+        asyncio.create_task(self.initial_help_setup())
 
-    async def initial_lobby_setup(self):
+    async def initial_help_setup(self):
         await self.websocket.send("Help Menu")
 
     async def handle_command(self, command):
