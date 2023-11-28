@@ -20,8 +20,9 @@ async def check_credentials(websocket, db_config):
         await websocket.send("Password cannot be blank.")
         return False, None
 
-    connection = create_db_connection(db_config)
+    connection = None
     try:
+        connection = create_db_connection(db_config)
         if connection:
             cursor = connection.cursor()
             cursor.execute("SELECT password FROM users WHERE username = %s", (username,))
@@ -49,18 +50,20 @@ async def check_credentials(websocket, db_config):
 
 
 async def register_user(websocket, db_config):
-    # Loop for email validation
-    while True:
-        await websocket.send("Enter email address for registration:")
-        email = await websocket.recv()
+    cursor = None
+    connection = None
+    try:
+        # Loop for email validation
+        while True:
+            await websocket.send("Enter email address for registration:")
+            email = await websocket.recv()
 
-        # Validate email format and check for blank email
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email) or not email.strip():
-            await websocket.send("Invalid or blank email format. Please enter a valid email address.")
-            continue
+            # Validate email format and check for blank email
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", email) or not email.strip():
+                await websocket.send("Invalid or blank email format. Please enter a valid email address.")
+                continue
 
-        connection = create_db_connection(db_config)
-        try:
+            connection = create_db_connection(db_config)
             if connection:
                 cursor = connection.cursor()
                 cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
@@ -72,64 +75,48 @@ async def register_user(websocket, db_config):
 
                 # Break the loop if email validation is successful
                 break
-        except Error as e:
-            print(f"Database error: {e}")
-            return False
-        finally:
-            cursor.close()
-            connection.close()
 
-    # Loop for username validation
-    while True:
-        await websocket.send("Enter a username for registration:")
-        username = await websocket.recv()
+        # Loop for username validation
+        while True:
+            await websocket.send("Enter a username for registration:")
+            username = await websocket.recv()
 
-        if not username.strip():
-            await websocket.send("Username cannot be blank. Please enter a valid username.")
-            continue
+            if not username.strip():
+                await websocket.send("Username cannot be blank. Please enter a valid username.")
+                continue
 
-        connection = create_db_connection(db_config)
-        try:
-            if connection:
-                cursor = connection.cursor()
-                cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
-                existing_username = cursor.fetchone()
+            cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
+            existing_username = cursor.fetchone()
 
-                if existing_username:
-                    await websocket.send("Username already exists. Please choose a different one.")
-                    continue
+            if existing_username:
+                await websocket.send("Username already exists. Please choose a different one.")
+                continue
 
-                # Break the loop if username validation is successful
-                break
-        except Error as e:
-            print(f"Database error: {e}")
-            return False
-        finally:
-            cursor.close()
-            connection.close()
+            # Break the loop if username validation is successful
+            break
 
-    # Proceed with registration using validated email and username
-    try:
-        connection = create_db_connection(db_config)
-        if connection:
-            # Generate a random password and hash it
-            password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-            hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        # Proceed with registration using validated email and username
+        # Generate a random password and hash it
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-            cursor = connection.cursor()
-            cursor.execute("INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
-                           (email, username, hashed_password))
-            connection.commit()
+        cursor.execute("INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
+                       (email, username, hashed_password))
+        connection.commit()
 
-            await websocket.send(f"Registration successful. Your username is '{username}' and your "
-                                 f"password is '{password}'.")
-            return True
+        await websocket.send(f"Registration successful. Your username is '{username}' "
+                             f"and your password is '{password}'.")
+        return True
+
     except Error as e:
         print(f"Database error: {e}")
         return False
+
     finally:
-        cursor.close()
-        connection.close()
+        if cursor is not None:
+            cursor.close()
+        if connection is not None:
+            connection.close()
 
 
 async def handle_authentication(websocket, db_config, registration_enabled):
