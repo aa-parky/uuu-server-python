@@ -1,6 +1,9 @@
 # uuu-server-python
 _A simple python websockets server_
 
+## Beware!
+I am a hobbyist and enthusiast, this code is most likely broken, insecure and vulnerable.
+But in proper Goblin hack'd together fashion it works for my purposes.
 
 ### server_auth.py
 
