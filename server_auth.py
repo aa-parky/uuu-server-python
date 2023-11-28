@@ -4,6 +4,8 @@ import ssl
 import configparser
 from context_manager import ContextManager
 from login import handle_authentication  # Updated import
+from connections import connected_users  # Import the connected_users dictionary
+
 
 # Function to load configuration
 def load_config():
@@ -17,26 +19,30 @@ def load_config():
     messages = config['Messages']
     return registration, motd_enabled, db_config, ssl_config, server_config, messages
 
+
 async def server_handler(websocket, path):
     registration, motd_enabled, db_config, ssl_config, server_config, messages = load_config()
 
-    # Create a ContextManager instance for this player, passing necessary configuration
-    player_context_manager = ContextManager(websocket, db_config, registration, messages)
+    while True:
+        player_context_manager = ContextManager(websocket, db_config, registration, messages)
 
-    # Handle login and registration process using handle_authentication
-    auth_status, action, username = await handle_authentication(websocket, db_config, registration)
+        auth_status, action, username = await handle_authentication(websocket, db_config, registration)
 
-    # After successful login or registration, switch to lobby context
-    if auth_status:
-        player_context_manager.username = username  # Set username if login was successful
-        await player_context_manager.set_context('c_lobby')
-        try:
-            while True:
-                message = await websocket.recv()
-                # Delegate all command handling to the ContextManager
-                await player_context_manager.handle_command(message)
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection closed.")
+        if auth_status:
+            player_context_manager.username = username
+            await player_context_manager.set_context('c_lobby')
+            try:
+                while True:
+                    message = await websocket.recv()
+                    await player_context_manager.handle_command(message)
+            except websockets.exceptions.ConnectionClosed:
+                print(f"Connection closed for {username}.")
+                if username in connected_users:
+                    del connected_users[username]  # Remove user from connected users
+                break
+        else:
+            await handle_authentication(websocket, db_config, registration)
+
 
 # Start the websocket server
 async def start_server():

@@ -6,8 +6,17 @@ import configparser
 import threading
 import queue
 
+def load_config():
+    config = configparser.ConfigParser()
+    config.read('client_config.ini')
+    settings = config['Settings']
+    server = config['Server']
+    return {
+        "display_current_time": settings.getboolean('display_current_time'),
+        "uri": server['uri'],
+        "port": server['port']
+    }
 
-# Function to read the display_current_time setting from client_config.ini
 def read_display_current_time_setting():
     config = configparser.ConfigParser()
     config.read('client_config.ini')
@@ -40,7 +49,8 @@ def input_thread(message_queue):
 
 
 async def websocket_client():
-    uri = "wss://localhost:7450"  # Replace with your server's URI
+    config = load_config()
+    uri = f"{config['uri']}:{config['port']}"
 
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False

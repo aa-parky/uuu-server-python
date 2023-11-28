@@ -1,6 +1,7 @@
 import asyncio
 import configparser
 import textwrap
+from connections import connected_users
 
 
 class CLobby:
@@ -15,6 +16,7 @@ class CLobby:
         # Define available commands for this context
         self.available_commands = {
             'refresh': 'refresh screen',
+            'who': 'list connected users',
             'help': 'Get help about commands',
             'commands': 'List all available commands',
             'manage': 'Enter management context',
@@ -59,12 +61,15 @@ class CLobby:
                 return motd_text
         except FileNotFoundError:
             return "MOTD file not found."
+
     async def handle_command(self, command):
         if command.lower() == 'help':
             # Switch to the help context
             await self.switch_context('c_help')
+        elif command.lower() == 'who':
+            await self.list_connected_users()
         elif command.lower() == 'refresh':
-           await  self.switch_context('c_lobby')
+            await self.switch_context('c_lobby')
         elif command.lower() == 'manage':
             # Switch to the management context
             await self.switch_context('c_management')
@@ -77,6 +82,10 @@ class CLobby:
             # Handle unrecognized command or general lobby actions
             await self.websocket.send(
                 "Unrecognized Lobby command. Type 'help', 'commands', 'manage', or 'messages' for more information.")
+
+    async def list_connected_users(self):
+        user_list = "Connected users:\n" + "\n".join(connected_users.keys())
+        await self.websocket.send(user_list)
 
     async def display_available_commands(self):
         commands_info = "Available Commands:\n"

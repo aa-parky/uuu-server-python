@@ -4,12 +4,21 @@ import string
 import re
 from mysql.connector import Error
 from database import create_db_connection
+from connections import connected_users  # Import the connected_users dictionary
+
 
 async def check_credentials(websocket, db_config):
     await websocket.send("Enter username:")
     username = await websocket.recv()
+    if not username.strip():
+        await websocket.send("Username cannot be blank.")
+        return False, None
+
     await websocket.send("Enter password:")
     password = await websocket.recv()
+    if not password.strip():
+        await websocket.send("Password cannot be blank.")
+        return False, None
 
     connection = create_db_connection(db_config)
     try:
@@ -22,17 +31,22 @@ async def check_credentials(websocket, db_config):
             if user_password_hash is not None:
                 authenticated = bcrypt.checkpw(password.encode(), user_password_hash[0].encode())
                 if authenticated:
+                    connected_users[username] = websocket  # Add the user to the connected users
                     return True, username
                 else:
+                    await websocket.send("Incorrect username or password.")
                     return False, None
             else:
+                await websocket.send("Incorrect username or password.")
                 return False, None
     except Error as e:
         print(f"Database error: {e}")
+        await websocket.send("An error occurred. Please try again later.")
         return False, None
     finally:
         if connection:
             connection.close()
+
 
 async def register_user(websocket, db_config):
     # Loop for email validation
@@ -107,7 +121,8 @@ async def register_user(websocket, db_config):
                            (email, username, hashed_password))
             connection.commit()
 
-            await websocket.send(f"Registration successful. Your username is '{username}' and your password is '{password}'.")
+            await websocket.send(f"Registration successful. Your username is '{username}' and your "
+                                 f"password is '{password}'.")
             return True
     except Error as e:
         print(f"Database error: {e}")
@@ -115,6 +130,7 @@ async def register_user(websocket, db_config):
     finally:
         cursor.close()
         connection.close()
+
 
 async def handle_authentication(websocket, db_config, registration_enabled):
     await websocket.send("Type 'login' to login or 'register' to create a new account.")
